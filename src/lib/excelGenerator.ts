@@ -32,28 +32,29 @@ export async function generateExcelFile(
   // Add match data
   let rowNumber = 2;
   schedule.rounds.forEach(round => {
-    const match = round.match;
-    const row = scheduleSheet.addRow({
-      round: round.roundNumber,
-      teamA1: match.teamA[0],
-      teamA2: match.teamA[1],
-      teamB1: match.teamB[0],
-      teamB2: match.teamB[1],
-      winner: 'Not Played',
+    round.matches.forEach(match => {
+      const row = scheduleSheet.addRow({
+        round: round.roundNumber,
+        teamA1: match.teamA[0],
+        teamA2: match.teamA[1],
+        teamB1: match.teamB[0],
+        teamB2: match.teamB[1],
+        winner: 'Not Played',
+      });
+      
+      // Add data validation for Winner column
+      const winnerCell = row.getCell('winner');
+      winnerCell.dataValidation = {
+        type: 'list',
+        allowBlank: false,
+        formulae: ['"Team A,Team B,Not Played"'],
+      };
+      
+      // Center align all cells
+      row.alignment = { vertical: 'middle', horizontal: 'center' };
+      
+      rowNumber++;
     });
-    
-    // Add data validation for Winner column
-    const winnerCell = row.getCell('winner');
-    winnerCell.dataValidation = {
-      type: 'list',
-      allowBlank: false,
-      formulae: ['"Team A,Team B,Not Played"'],
-    };
-    
-    // Center align all cells
-    row.alignment = { vertical: 'middle', horizontal: 'center' };
-    
-    rowNumber++;
   });
   
   // Sheet 2: PLAYER STATS
