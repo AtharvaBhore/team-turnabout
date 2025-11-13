@@ -14,9 +14,10 @@ const Index = () => {
     setPlayers(playerList);
   };
 
-  const playerStats = schedule && players.length > 0
-    ? calculatePlayerStats(players, schedule)
-    : [];
+  const playerStats =
+    schedule && players.length > 0
+      ? calculatePlayerStats(players, schedule)
+      : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +67,7 @@ const Index = () => {
         </div>
 
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-          <p>Built with Round-Robin Perfect Matching Algorithm (Circle Method)</p>
+          <p>Built with Team Rotation Algorithm</p>
         </footer>
       </div>
     </div>
