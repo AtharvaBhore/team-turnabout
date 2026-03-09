@@ -1,6 +1,6 @@
 // API client for the backend. 
 // Change BASE_URL to point to your deployed backend.
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://badminton-backend-6ylg.onrender.com/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://badminton-backend-7286.onrender.com/api';
 
 // ─── Players ────────────────────────────────────────────
 export interface PlayerFromDB {
