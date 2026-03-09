@@ -57,5 +57,4 @@ Express.js + MongoDB backend for the badminton match scheduler.
 - `players` [String]
 - `rounds` [{ roundNumber, matches: [{ teamA, teamB, winner }], sittingOut }]
 - `totalRounds` (Number)
-- `status` ("in_progress" | "completed")
 - `createdAt`, `completedAt` (Date)

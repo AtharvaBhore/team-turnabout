@@ -20,7 +20,6 @@ export interface SessionSummary {
   _id: string;
   players: string[];
   totalRounds: number;
-  status: 'in_progress' | 'completed';
   createdAt: string;
   completedAt?: string;
 }

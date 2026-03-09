@@ -20,11 +20,6 @@ const matchSessionSchema = new mongoose.Schema({
   players: [String],
   rounds: [roundSchema],
   totalRounds: Number,
-  status: {
-    type: String,
-    enum: ['in_progress', 'completed'],
-    default: 'in_progress',
-  },
   createdAt: {
     type: Date,
     default: Date.now,

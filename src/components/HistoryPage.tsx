@@ -61,15 +61,6 @@ export function HistoryPage() {
                 {selectedSession.players.join(', ')} • {selectedSession.totalRounds} rounds
               </p>
             </div>
-            <Badge
-              className={`ml-auto ${
-                selectedSession.status === 'completed'
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {selectedSession.status === 'completed' ? 'Completed' : 'In Progress'}
-            </Badge>
           </div>
         </Card>
 
@@ -165,16 +156,6 @@ export function HistoryPage() {
                       {session.players.length} players
                     </span>
                     <span>{session.totalRounds} rounds</span>
-                    <Badge
-                      variant="outline"
-                      className={
-                        session.status === 'completed'
-                          ? 'border-accent text-accent'
-                          : 'border-muted-foreground'
-                      }
-                    >
-                      {session.status}
-                    </Badge>
                   </div>
                 </div>
               </div>

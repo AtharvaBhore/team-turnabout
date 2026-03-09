@@ -1,25 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Users, Plus, Minus, Play } from 'lucide-react';
 import { toast } from 'sonner';
+import { fetchPlayers } from '@/lib/api';
 
 interface PlayerInputProps {
   onGenerateSchedule: (players: string[]) => void;
 }
 
+interface Player {
+  _id: string;
+  name: string;
+}
+
 export function PlayerInput({ onGenerateSchedule }: PlayerInputProps) {
   const [playerCount, setPlayerCount] = useState<number>(6);
-  const [playerNames, setPlayerNames] = useState<string[]>(
-    Array(6).fill('').map((_, i) => `Player ${i + 1}`)
-  );
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>(Array(6).fill(''));
 
-  // 🔥 STRICT LIMITS: MIN 4 — MAX 8
+  // Fetch players from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      const players = await fetchPlayers();
+      setPlayers(players);
+    };
+    fetchData();
+  }, []);
+
+  // Handle player count change
   const handlePlayerCountChange = (count: number) => {
     if (count < 4) {
-      toast.error('Minimum 4 players required for 2v2 matches');
+      toast.error('Minimum 4 players required');
       return;
     }
     if (count > 8) {
@@ -28,40 +41,33 @@ export function PlayerInput({ onGenerateSchedule }: PlayerInputProps) {
     }
 
     setPlayerCount(count);
-
-    const newNames = Array(count)
-      .fill('')
-      .map((_, i) => playerNames[i] || `Player ${i + 1}`);
-
-    setPlayerNames(newNames);
+    setSelectedPlayers(prev => {
+      const updated = [...prev];
+      updated.length = count;
+      return updated.fill('', prev.length);
+    });
   };
 
-  const handlePlayerNameChange = (index: number, name: string) => {
-    const newNames = [...playerNames];
-    newNames[index] = name;
-    setPlayerNames(newNames);
+  // Handle dropdown change
+  const handlePlayerChange = (index: number, playerName: string) => {
+    const newSelection = [...selectedPlayers];
+    newSelection[index] = playerName;
+    setSelectedPlayers(newSelection);
   };
 
   const validateAndGenerate = () => {
-    const trimmedNames = playerNames.map((name) => name.trim());
-
-    if (trimmedNames.some((n) => n === '')) {
-      toast.error('All player names must be filled');
+    if (selectedPlayers.some(p => p === '')) {
+      toast.error('Select all players');
       return;
     }
 
-    if (new Set(trimmedNames).size !== trimmedNames.length) {
-      toast.error('Player names must be unique');
-      return;
-    }
-
-    if (trimmedNames.length < 4) {
-      toast.error('Minimum 4 players required for 2v2 matches');
+    if (new Set(selectedPlayers).size !== selectedPlayers.length) {
+      toast.error('Players must be unique');
       return;
     }
 
     toast.success('Schedule generated successfully!');
-    onGenerateSchedule(trimmedNames);
+    onGenerateSchedule(selectedPlayers);
   };
 
   return (
@@ -72,81 +78,76 @@ export function PlayerInput({ onGenerateSchedule }: PlayerInputProps) {
             <Users className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Setup Players</h2>
+            <h2 className="text-2xl font-bold">Setup Players</h2>
             <p className="text-sm text-muted-foreground">
-              Configure your team roster
+              Select players for the match
             </p>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {/* 🔥 PLAYER COUNT INPUT */}
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Label htmlFor="playerCount" className="text-sm font-medium">
-                Number of Players
-              </Label>
-              <Input
-                id="playerCount"
-                type="number"
-                min={4}
-                max={8}   // ⬅️ HARD LIMIT HERE
-                value={playerCount}
-                onChange={(e) =>
-                  handlePlayerCountChange(parseInt(e.target.value))
-                }
-                className="mt-1.5"
-              />
-            </div>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handlePlayerCountChange(playerCount - 1)}
-              disabled={playerCount <= 4}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handlePlayerCountChange(playerCount + 1)}
-              disabled={playerCount >= 8} // ⬅️ LIMIT HERE
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
+        {/* Player count */}
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <Label>Number of Players</Label>
+            <input
+              type="number"
+              min={4}
+              max={8}
+              value={playerCount}
+              onChange={(e) =>
+                handlePlayerCountChange(parseInt(e.target.value))
+              }
+              className="w-full border rounded px-3 py-2 mt-1"
+            />
           </div>
 
-          {/* PLAYER NAME INPUTS */}
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-            {playerNames.map((name, index) => (
-              <div key={index} className="animate-fade-in">
-                <Label
-                  htmlFor={`player-${index}`}
-                  className="text-sm font-medium"
-                >
-                  Player {index + 1}
-                </Label>
-                <Input
-                  id={`player-${index}`}
-                  type="text"
-                  value={name}
-                  onChange={(e) =>
-                    handlePlayerNameChange(index, e.target.value)
-                  }
-                  placeholder={`Enter player ${index + 1} name`}
-                  className="mt-1.5"
-                />
-              </div>
-            ))}
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePlayerCountChange(playerCount - 1)}
+            disabled={playerCount <= 4}
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handlePlayerCountChange(playerCount + 1)}
+            disabled={playerCount >= 8}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
 
-        {/* GENERATE BUTTON */}
+        {/* Player dropdowns */}
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+          {selectedPlayers.map((player, index) => (
+            <div key={index}>
+              <Label>Player {index + 1}</Label>
+
+              <select
+                value={player}
+                onChange={(e) => handlePlayerChange(index, e.target.value)}
+                className="w-full border rounded px-3 py-2 mt-1"
+              >
+                <option value="">Select player</option>
+
+                {players
+                  .filter(p => !selectedPlayers.includes(p.name) || p.name === player)
+                  .map(p => (
+                    <option key={p._id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ))}
+        </div>
+
         <Button
           onClick={validateAndGenerate}
-          className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+          className="w-full"
           size="lg"
         >
           <Play className="w-5 h-5 mr-2" />

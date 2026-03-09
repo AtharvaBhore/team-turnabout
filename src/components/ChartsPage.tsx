@@ -65,15 +65,44 @@ export function ChartsPage() {
     winRate: { label: 'Win Rate %', color: 'hsl(210 100% 48%)' },
   };
 
+  const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   // Line chart data: trend over sessions
   const playerNames = Object.keys(trends);
   const maxSessions = Math.max(0, ...playerNames.map((p) => trends[p].length));
-  const lineData = Array.from({ length: maxSessions }, (_, i) => {
-    const point: any = { session: `S${i + 1}` };
-    for (const name of playerNames) {
-      point[name] = trends[name]?.[i]?.winRate ?? null;
+  // Collect all unique session dates
+const allDates = new Set<string>();
+
+for (const player of Object.keys(trends)) {
+  for (const point of trends[player]) {
+    allDates.add(point.sessionDate);
+  }
+}
+
+// Sort dates chronologically
+const sortedDates = Array.from(allDates).sort(
+  (a, b) => new Date(a).getTime() - new Date(b).getTime()
+);
+
+// Convert to chart rows
+  const lineData = sortedDates.map((date) => {
+    const row: any = { session: formatDate(date) };
+
+    for (const player of Object.keys(trends)) {
+      const entry = trends[player].find(
+        (p) => new Date(p.sessionDate).getTime() === new Date(date).getTime()
+      );
+
+      row[player] = entry ? entry.winRate : null;
     }
-    return point;
+
+    return row;
   });
 
   const lineConfig: ChartConfig = {};
