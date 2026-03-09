@@ -42,7 +42,39 @@ export function HistoryPage() {
     }
   };
 
+  const stats: Record<string, { wins: number; losses: number; played: number }> = {};
+
+  
   if (selectedSession) {
+    selectedSession.rounds.forEach((round) => {
+      round.matches.forEach((match) => {
+        if (!match.winner) return;
+  
+        const players = [...match.teamA, ...match.teamB];
+  
+        players.forEach((p) => {
+          if (!stats[p]) stats[p] = { wins: 0, losses: 0, played: 0 };
+  
+          stats[p].played++;
+  
+          const isTeamA = match.teamA.includes(p);
+  
+          if ((match.winner === 'A' && isTeamA) || (match.winner === 'B' && !isTeamA)) {
+            stats[p].wins++;
+          } else {
+            stats[p].losses++;
+          }
+        });
+      });
+    });
+  
+    const leaderboard = Object.entries(stats)
+      .map(([name, s]) => ({
+        name,
+        ...s,
+        winPercentage: s.played ? Math.round((s.wins / s.played) * 100) : 0
+      }))
+      .sort((a, b) => b.winPercentage - a.winPercentage);
     return (
       <div className="space-y-6">
         <Button variant="ghost" onClick={() => setSelectedSession(null)} className="gap-2">
@@ -61,6 +93,52 @@ export function HistoryPage() {
                 {selectedSession.players.join(', ')} • {selectedSession.totalRounds} rounds
               </p>
             </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 shadow-card">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-gradient-secondary rounded-lg">
+              <Trophy className="w-5 h-5 text-secondary-foreground" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground">
+              Session Leaderboard
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {leaderboard.map((stat, index) => (
+              <div
+                key={stat.name}
+                className="p-4 bg-muted/50 rounded-lg border border-border"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-semibold text-foreground">
+                    #{index + 1} {stat.name}
+                  </p>
+                  <span className="text-sm font-bold text-primary">
+                    {stat.winPercentage}%
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-sm text-center">
+                  <div>
+                    <p className="font-medium text-foreground">{stat.played}</p>
+                    <p className="text-xs text-muted-foreground">Played</p>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-accent">{stat.wins}</p>
+                    <p className="text-xs text-muted-foreground">Wins</p>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-destructive">{stat.losses}</p>
+                    <p className="text-xs text-muted-foreground">Losses</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
 

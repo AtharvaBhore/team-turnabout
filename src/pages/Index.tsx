@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlayerInput } from '@/components/PlayerInput';
 import { ScheduleDisplay } from '@/components/ScheduleDisplay';
@@ -11,6 +11,24 @@ import { Calendar, History, BarChart3, TrendingUp } from 'lucide-react';
 const Index = () => {
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [players, setPlayers] = useState<string[]>([]);
+  const STORAGE_KEY = "team-turnabout-live-session";
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved);
+
+      if (parsed.schedule && parsed.players) {
+        setSchedule(parsed.schedule);
+        setPlayers(parsed.players);
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
 
   const handleGenerateSchedule = (playerList: string[]) => {
     const generatedSchedule = generateSchedule(playerList);

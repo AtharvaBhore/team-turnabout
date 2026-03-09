@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Download, Trophy, TrendingUp, Save } from 'lucide-react';
@@ -14,14 +14,48 @@ interface ScheduleDisplayProps {
   playerStats: Array<{ name: string; totalMatches: number; sitsOut: number }>;
 }
 
+const STORAGE_KEY = "team-turnabout-live-session";
+
 export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<number, 'A' | 'B'>>({});
   const [saving, setSaving] = useState(false);
 
+  /* ---------------- Restore saved results on load ---------------- */
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (!saved) return;
+
+    try {
+      const parsed = JSON.parse(saved);
+
+      if (parsed.results) setResults(parsed.results);
+
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
+  /* ---------------- Persist results whenever they change ---------------- */
+
+  useEffect(() => {
+    const sessionData = {
+      schedule,
+      players,
+      results
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+  }, [results, schedule, players]);
+
   const handleResultSubmitted = (roundNumber: number, matchIndex: number, winner: 'A' | 'B') => {
-    setResults((prev) => ({ ...prev, [roundNumber]: winner }));
+    setResults((prev) => ({
+      ...prev,
+      [roundNumber]: winner
+    }));
   };
 
   const handleSaveSession = async () => {
@@ -36,10 +70,9 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
     try {
       setSaving(true);
 
-      // 🔥 Inject winners into rounds
       const roundsWithResults = schedule.rounds.map((round) => ({
         ...round,
-        matches: round.matches.map((match, index) => ({
+        matches: round.matches.map((match) => ({
           ...match,
           winner: results[round.roundNumber] ?? null
         }))
@@ -53,7 +86,12 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
 
       setSessionId(session._id);
 
+      /* -------- Clear localStorage after session saved -------- */
+
+      localStorage.removeItem(STORAGE_KEY);
+
       toast.success("Session saved to database!");
+
     } catch (error) {
       console.error(error);
       toast.error("Failed to save session");
@@ -77,7 +115,8 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
     }
   };
 
-  // Live statistics
+  /* ---------------- Live statistics ---------------- */
+
   const livePlayerStats = players.map((player) => {
     let wins = 0;
     let losses = 0;
@@ -158,8 +197,7 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
         </div>
       </Card>
 
-      {/* Live Player Stats */}
-
+      {/* Stats UI unchanged */}
       <Card className="p-6 shadow-card">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-gradient-secondary rounded-lg">
@@ -202,7 +240,6 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
       </Card>
 
       {/* Rounds */}
-
       <div className="space-y-4">
         <h3 className="text-xl font-bold text-foreground">
           Match Schedule — Select Winners
