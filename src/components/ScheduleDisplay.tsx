@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Download, Trophy, TrendingUp, Save } from 'lucide-react';
+import { Download, Trophy, TrendingUp, Save, XCircle } from 'lucide-react';
 import { Schedule } from '@/lib/scheduleGenerator';
 import { LiveRoundCard } from './LiveRoundCard';
 import { toast } from 'sonner';
@@ -12,11 +12,12 @@ interface ScheduleDisplayProps {
   schedule: Schedule;
   players: string[];
   playerStats: Array<{ name: string; totalMatches: number; sitsOut: number }>;
+  onClearSession?: () => void;
 }
 
 const STORAGE_KEY = "team-turnabout-live-session";
 
-export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
+export function ScheduleDisplay({ schedule, players, onClearSession }: ScheduleDisplayProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<number, 'A' | 'B'>>({});
@@ -42,6 +43,11 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
   /* ---------------- Persist results whenever they change ---------------- */
 
   useEffect(() => {
+    if (Object.keys(results).length === 0) {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+
     const sessionData = {
       schedule,
       players,
@@ -115,6 +121,14 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
     }
   };
 
+  const handleClearSession = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    setResults({});
+    setSessionId(null);
+    onClearSession?.();
+    toast.success('Session cleared from local storage');
+  };
+
   /* ---------------- Live statistics ---------------- */
 
   const livePlayerStats = players.map((player) => {
@@ -182,6 +196,15 @@ export function ScheduleDisplay({ schedule, players }: ScheduleDisplayProps) {
               {saving ? "Saving..." : sessionId ? "Session Saved" : "Save Session"}
             </Button>
 
+            <Button
+              onClick={handleClearSession}
+              size="lg"
+              variant="destructive"
+              className="flex items-center gap-2"
+            >
+              <XCircle className="w-5 h-5" />
+              Clear Session
+            </Button>
             <Button
               onClick={handleDownloadExcel}
               disabled={isGenerating}

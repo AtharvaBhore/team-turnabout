@@ -89,6 +89,10 @@ const Index = () => {
                     schedule={schedule}
                     players={players}
                     playerStats={playerStats}
+                    onClearSession={() => {
+                      setSchedule(null);
+                      setPlayers([]);
+                    }}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full min-h-[400px]">
