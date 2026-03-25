@@ -65,11 +65,8 @@ export function ScheduleDisplay({ schedule, players, onClearSession }: ScheduleD
   };
 
   const handleSaveSession = async () => {
-    const completedCount = Object.keys(results).length;
-    const totalCount = schedule.totalRounds;
-
-    if (completedCount !== totalCount) {
-      toast.error("Complete all matches before saving the session");
+    if (Object.keys(results).length === 0) {
+      toast.error("Complete at least one match before saving");
       return;
     }
 
